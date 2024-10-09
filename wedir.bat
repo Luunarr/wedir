@@ -1,3 +1,3 @@
 @echo off
 cd "C:\wedir"
-py "C:\wedir\we.py"
+py "we.py"
