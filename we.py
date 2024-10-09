@@ -8,8 +8,9 @@ def draw(win, directory, files, selection, offset):
 
     dirDisplay = directory.replace(os.environ['USERPROFILE'], '~')
     dirDisplay = (dirDisplay[:width - 20] + "...") if len(dirDisplay) > width - 20 else dirDisplay
-    win.addstr(0, 0, f"Dir: {dirDisplay}", curses.color_pair(5))
-
+    win.addstr(0, 0, f"[r] rename | [n] new folder | [c] copy | [v] paste | [d] delete | [g] change drive ", curses.color_pair(15))
+    win.addstr(1, 0, f"Directory: {dirDisplay}\n", curses.color_pair(100))
+    
     if not files:
         win.addstr(2, 2, "🚫 No files or folders available.", curses.color_pair(1))
         win.refresh()
@@ -37,10 +38,18 @@ def draw(win, directory, files, selection, offset):
     win.refresh()
 
 def getFileColorIcon(file, directory):
-    file_path = os.path.join(directory, file)
+    Fpath = os.path.join(directory, file)
+    
+    hidden = file.startswith('.') or (os.path.isfile(Fpath) and os.stat(Fpath).st_file_attributes & 0x02)
+    
+
     if file == "..":
-        return curses.color_pair(2), "🔙"
-    if os.path.isdir(file_path):
+        return curses.color_pair(24), "🔙"
+    
+    if hidden:
+        return curses.color_pair(1), "👻"
+    
+    if os.path.isdir(Fpath):
         return curses.color_pair(4), "📁"
     if file.endswith('.txt'):
         return curses.color_pair(3), "📄"  
@@ -98,7 +107,7 @@ def renamef(directory, selected, win):
     if new_name:
         os.rename(os.path.join(directory, selected), os.path.join(directory, new_name))
 
-def opene(selected):
+def openee(selected):
     os.startfile(os.path.normpath(selected))
 
 def manager(win):
@@ -111,9 +120,9 @@ def manager(win):
     curses.init_pair(5, curses.COLOR_CYAN, curses.COLOR_BLACK)
     curses.init_pair(6, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
     curses.init_pair(7, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_BLUE)
-    curses.init_pair(9, curses.COLOR_WHITE, curses.COLOR_GREEN)
-    curses.init_pair(10, curses.COLOR_YELLOW, curses.COLOR_BLUE)
+    curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_BLACK)
+    curses.init_pair(9, curses.COLOR_WHITE, curses.COLOR_BLACK)
+    curses.init_pair(10, curses.COLOR_YELLOW, curses.COLOR_BLACK)
     curses.init_pair(11, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(12, curses.COLOR_CYAN, curses.COLOR_BLACK)
     curses.init_pair(13, curses.COLOR_GREEN, curses.COLOR_BLACK)
@@ -130,12 +139,14 @@ def manager(win):
     curses.init_pair(24, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(25, curses.COLOR_YELLOW, curses.COLOR_BLACK)
     curses.init_pair(26, curses.COLOR_CYAN, curses.COLOR_BLACK)
+    curses.init_pair(100, curses.COLOR_GREEN, curses.COLOR_BLACK)
 
     curses.curs_set(0)
 
     directory = os.environ['USERPROFILE']
     selection = 0
     offset = 0
+    clipboard = None  
 
     while True:
         try:
@@ -194,6 +205,7 @@ def manager(win):
         elif key == ord('d'):
             selected = files[selection]
             selectedPath = os.path.join(directory, selected)
+            win.addstr(curses.LINES - 2, 0, "Are you sure you want to delete? (y/n): ")
             confirm = win.getch()
             if confirm == ord('y'):
                 os.remove(selectedPath) if os.path.isfile(selectedPath) else shutil.rmtree(selectedPath)
@@ -205,6 +217,26 @@ def manager(win):
             curses.noecho()
             if NFname:
                 os.mkdir(os.path.join(directory, NFname))
+
+        elif key == ord('c'):
+            selected = files[selection]
+            clipboard = os.path.join(directory, selected)
+
+        elif key == ord('v') and clipboard:
+            if os.path.isfile(clipboard):
+                shutil.copy(clipboard, directory)
+            else:
+                shutil.copytree(clipboard, os.path.join(directory, os.path.basename(clipboard)))
+
+        elif key == ord('g'):
+            win.addstr(curses.LINES - 2, 0, "Enter drive letter (e.g. C, D): ")
+            curses.echo()
+            dl = win.getstr(curses.LINES - 2, 30, 5).decode("utf-8").strip().upper()
+            curses.noecho()
+            if dl:
+                directory = f"{dl}:\\"
+                selection = 0
+                offset = 0
 
         elif key == ord('q'):
             break
