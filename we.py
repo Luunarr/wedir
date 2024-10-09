@@ -15,24 +15,24 @@ def draw(win, directory, files, selection, offset):
         win.refresh()
         return
 
-    num_cols = 3
-    col_width = width // num_cols
-    visible_files = files[offset:offset + (height - 4) * num_cols]
+    Ncols = 3
+    colW = width // Ncols
+    Vfiles = files[offset:offset + (height - 4) * Ncols]
 
-    for idx, file in enumerate(visible_files):
-        row = (idx // num_cols) + 2
-        col = (idx % num_cols) * col_width
+    for idx, file in enumerate(Vfiles):
+        row = (idx // Ncols) + 2
+        col = (idx % Ncols) * colW
         
         color, emoji = getFileColorIcon(file, directory)
 
-        name = f"{emoji} {file[:col_width - 3]}"
+        name = f"{emoji} {file[:colW - 3]}"
         if os.path.isdir(os.path.join(directory, file)):
             name += "/"
 
         if idx + offset == selection:
-            win.addstr(row, col, name.ljust(col_width - 1), curses.A_REVERSE | color)
+            win.addstr(row, col, name.ljust(colW - 1), curses.A_REVERSE | color)
         else:
-            win.addstr(row, col, name.ljust(col_width - 1), color)
+            win.addstr(row, col, name.ljust(colW - 1), color)
 
     win.refresh()
 
