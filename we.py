@@ -1,116 +1,128 @@
 import os
 import curses
 import shutil
+import socket
 
-def draw(win, directory, files, selection, offset):
+def drw(win, dir, fls, sel, off):
     win.clear()
-    height, width = win.getmaxyx()
+    hgt, wth = win.getmaxyx()
 
-    dirDisplay = directory.replace(os.environ['USERPROFILE'], '~')
-    dirDisplay = (dirDisplay[:width - 20] + "...") if len(dirDisplay) > width - 20 else dirDisplay
-    win.addstr(0, 0, f"[r] rename | [n] new folder | [c] copy | [v] paste | [d] delete | [g] change drive ", curses.color_pair(15))
-    win.addstr(1, 0, f"Directory: {dirDisplay}\n", curses.color_pair(100))
+    lg = os.getlogin()
+    hn = socket.gethostname()
+
+    dD = dir.replace(os.environ['USERPROFILE'], '~')
+    dD = (dD[:wth - 20] + "...") if len(dD) > wth - 20 else dD
+    uI = f"({hn}@{lg}) Directory: "
+    win.addstr(0, 0, "([r]-[n]-[d]) ([c]-[v]) ([g])", curses.color_pair(5))
+    win.addstr(1, 0, uI, curses.color_pair(100))
+    s = len(uI)
+    win.addstr(1, s, dD, curses.color_pair(101))
+    win.addstr(3, 0, "") 
     
-    if not files:
+    if not fls:
         win.addstr(2, 2, "🚫 No files or folders available.", curses.color_pair(1))
         win.refresh()
         return
 
-    Ncols = 3
-    colW = width // Ncols
-    Vfiles = files[offset:offset + (height - 4) * Ncols]
+    nC = 3
+    cW = wth // nC
+    vF = fls[off:off + (hgt - 4) * nC]
 
-    for idx, file in enumerate(Vfiles):
-        row = (idx // Ncols) + 2
-        col = (idx % Ncols) * colW
+    for idx, f in enumerate(vF):
+        r = (idx // nC) + 2
+        c = (idx % nC) * cW
         
-        color, emoji = getFileColorIcon(file, directory)
+        clr, emo = gFci(f, dir)
 
-        name = f"{emoji} {file[:colW - 3]}"
-        if os.path.isdir(os.path.join(directory, file)):
-            name += "/"
+        n = f"{emo} {f[:cW - 3]}"
+        if os.path.isdir(os.path.join(dir, f)):
+            n += "/"
 
-        if idx + offset == selection:
-            win.addstr(row, col, name.ljust(colW - 1), curses.A_REVERSE | color)
+        if idx + off == sel:
+            win.addstr(r, c, n.ljust(cW - 1), curses.A_REVERSE | clr)
         else:
-            win.addstr(row, col, name.ljust(colW - 1), color)
+            win.addstr(r, c, n.ljust(cW - 1), clr)
 
     win.refresh()
 
-def getFileColorIcon(file, directory):
-    Fpath = os.path.join(directory, file)
+def gFci(f, dir):
+    fP = os.path.join(dir, f)
     
-    hidden = file.startswith('.') or (os.path.isfile(Fpath) and os.stat(Fpath).st_file_attributes & 0x02)
-    
+    hdn = f.startswith('.') or (os.path.isfile(fP) and os.stat(fP).st_file_attributes & 0x02)
 
-    if file == "..":
+    if f == "..":
         return curses.color_pair(24), "🔙"
     
-    if hidden:
+    if hdn:
         return curses.color_pair(1), "👻"
-    
-    if os.path.isdir(Fpath):
+
+    extm = {
+        ('.txt', '.md', '.json', '.rst'): (3, "📄"),  
+        ('.py', '.pyw'): (5, "🐍"),                  
+        ('.jpg', '.jpeg', '.png', '.gif', '.svg', '.bmp', '.tiff'): (6, "🌆"),
+        ('.mp4', '.mkv', '.avi', '.mov', '.flv', '.gif', '.webm'): (7, "🎬"), 
+        ('.pdf',): (8, "📕"),               
+        ('.zip', '.rar', '.tar', '.gz', '.bz2', '.7z', '.xz'): (9, "📦"),
+        ('.exe', '.sh', '.bat', '.msi', '.app', '.apk', '.bin'): (10, "💻"),
+        ('.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a'): (11, "🎵"),  
+        ('.doc', '.docx', '.odt', '.rtf', '.tex'): (12, "📝"),
+        ('.csv', '.xls', '.xlsx', '.ods'): (13, "📊"), 
+        ('.ppt', '.pptx', '.odp', '.key'): (14, "📊"),  
+        ('.html', '.htm', '.xhtml', '.xml'): (15, "🐘"),  
+        ('.php', '.php3', '.php4', '.php5'): (18, "🔧"),
+        ('.js', '.ts', '.jsx', '.tsx'): (19, "📜"),
+        ('.css', '.scss', '.less'): (20, "🎨"),
+        ('.sh', '.bash', '.zsh'): (10, "💻"), 
+        ('.log', '.out'): (25, "📋"),
+        ('.ttf', '.otf', '.woff', '.woff2'): (30, "🔤"),  
+        ('.sql', '.sqlite', '.db', '.accdb'): (31, "💾"),
+        ('.iso', '.img', '.vhd', '.vdi'): (32, "💿"),
+        ('.msi', '.cab'): (33, "🖥️"),  
+        ('.deb', '.rpm', '.pkg'): (34, "🐧"),  
+        ('.yml', '.yaml', '.ini', '.cfg'): (35, "⚙️"),  
+        ('.dockerfile', '.container', '.tar.gz'): (36, "🐋"),  
+        ('.venv', '.env'): (37, "📦"),  
+        ('.crt', '.key', '.pem'): (38, "🔑"),  
+        ('.pyc', '.pyo'): (39, "🐍"),  
+        ('.bat', '.cmd'): (24, "⚙️"),  
+        ('.pcap', '.cap'): (40, "🛜"),  
+        ('.rb'): (41, "💎"),
+        ('.go'): (42, "🐹"),  
+        ('.java', '.jar'): (43, "☕"),  
+        ('.c', '.cpp', '.h'): (44, "🖥️"),  
+        ('.rs'): (45, "🦀"),  
+        ('.pl', '.pm'): (46, "🐫"),  
+        ('.xml',): (47, "📂"),  
+        ('.yaml', '.yml'): (48, "📝"),  
+        ('.lua'): (49, "🌑"),  
+        ('.xz', '.bz2'): (50, "📦")
+    }
+
+    if os.path.isdir(fP):
         return curses.color_pair(4), "📁"
-    if file.endswith('.txt'):
-        return curses.color_pair(3), "📄"  
-    if file.endswith('.py'):
-        return curses.color_pair(5), "🐍"  
-    if file.endswith('.jpg') or file.endswith('.png'):
-        return curses.color_pair(6), "🌆"  
-    if file.endswith('.mp4') or file.endswith('.mkv'):
-        return curses.color_pair(7), "🎬"  
-    if file.endswith('.pdf'):
-        return curses.color_pair(8), "📕" 
-    if file.endswith('.zip') or file.endswith('.rar'):
-        return curses.color_pair(9), "📦"  
-    if file.endswith('.exe'):
-        return curses.color_pair(10), "💻"  
-    if file.endswith('.mp3') or file.endswith('.wav'):
-        return curses.color_pair(11), "🎵"  
-    if file.endswith('.doc') or file.endswith('.docx'):
-        return curses.color_pair(12), "📝" 
-    if file.endswith('.csv'):
-        return curses.color_pair(13), "📊"  
-    if file.endswith('.ppt') or file.endswith('.pptx'):
-        return curses.color_pair(14), "📊"  
-    if file.endswith('.html') or file.endswith('.htm'):
-        return curses.color_pair(15), "🌐"  
-    if file.endswith('.json'):
-        return curses.color_pair(16), "📄"  
-    if file.endswith('.gif'):
-        return curses.color_pair(17), "🎥" 
-    if file.endswith('.php'):
-        return curses.color_pair(18), "🔧"  
-    if file.endswith('.js'):
-        return curses.color_pair(19), "📜"  
-    if file.endswith('.css'):
-        return curses.color_pair(20), "🎨" 
-    if file.endswith('.sh'):
-        return curses.color_pair(21), "💻" 
-    if file.endswith('.svg'):
-        return curses.color_pair(22), "🖼️" 
-    if file.endswith('.md'):
-        return curses.color_pair(23), "📜"  
-    if file.endswith('.bat'):
-        return curses.color_pair(24), "⚙️"
-    if file.endswith('.log'):
-        return curses.color_pair(25), "📋"
-    if file.endswith('.apk'):
-        return curses.color_pair(26), "📱"
+
+    for exts, (clr, ico) in extm.items():
+        if f.endswith(exts):
+            return curses.color_pair(clr), ico
+
     return curses.color_pair(1), "👀"
 
-def renamef(directory, selected, win):
+def renf(dir, sel, win):
     curses.echo()
     win.addstr(curses.LINES - 2, 0, "Enter new name: ")
-    new_name = win.getstr(curses.LINES - 2, 17, 80).decode("utf-8").strip()
+    nN = win.getstr(curses.LINES - 2, 17, 80).decode("utf-8").strip()
     curses.noecho()
-    if new_name:
-        os.rename(os.path.join(directory, selected), os.path.join(directory, new_name))
+    if nN:
+        new_path = os.path.join(dir, nN)
+        if not os.path.exists(new_path):
+            os.rename(os.path.join(dir, sel), new_path)
+        else:
+            win.addstr(curses.LINES - 2, 0, "Error: File already exists!       ")
 
-def openee(selected):
-    os.startfile(os.path.normpath(selected))
+def opn(sel):
+    os.startfile(os.path.normpath(sel))
 
-def manager(win):
+def mgr(win):
     curses.start_color()
 
     curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
@@ -139,110 +151,126 @@ def manager(win):
     curses.init_pair(24, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(25, curses.COLOR_YELLOW, curses.COLOR_BLACK)
     curses.init_pair(26, curses.COLOR_CYAN, curses.COLOR_BLACK)
-    curses.init_pair(100, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    curses.init_pair(100, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(101, curses.COLOR_RED, curses.COLOR_WHITE)
 
     curses.curs_set(0)
 
-    directory = os.environ['USERPROFILE']
-    selection = 0
-    offset = 0
-    clipboard = None  
-
+    dir = os.environ['USERPROFILE']
+    sel = 0
+    off = 0
+    clip = None 
     while True:
         try:
-            files = os.listdir(directory)
+            fls = os.listdir(dir)
         except PermissionError:
-            directory = os.path.dirname(directory)
+            dir = os.path.dirname(dir)
             continue
 
-        files.insert(0, "..")
-        totalFiles = len(files)
-        selection = min(selection, totalFiles - 1)
+        fls.insert(0, "..")
+        tF = len(fls)
+        sel = min(sel, tF - 1)
 
-        draw(win, directory, files, selection, offset)
+        drw(win, dir, fls, sel, off)
 
-        key = win.getch()
+        k = win.getch()
 
-        if key == curses.KEY_DOWN:
-            selection += 3
-            if selection >= totalFiles:
-                selection = totalFiles - 1
-            if selection >= offset + (curses.LINES - 4) * 3:
-                offset += 1
+        if k == curses.KEY_DOWN:
+            sel += 3
+            if sel >= tF:
+                sel = tF - 1
+            if sel >= off + (curses.LINES - 4) * 3:
+                off += 1
 
-        elif key == curses.KEY_UP:
-            selection -= 3
-            if selection < 0:
-                selection = 0
-            if selection < offset:
-                offset = max(0, offset - 1)
+        elif k == curses.KEY_UP:
+            sel -= 3
+            if sel < 0:
+                sel = 0
+            if sel < off:
+                off = max(0, off - 1)
 
-        elif key == curses.KEY_RIGHT:
-            selection = min(selection + 1, totalFiles - 1)
+        elif k == curses.KEY_RIGHT:
+            sel = min(sel + 1, tF - 1)
 
-        elif key == curses.KEY_LEFT:
-            selection = max(selection - 1, 0)
+        elif k == curses.KEY_LEFT:
+            sel = max(sel - 1, 0)
 
-        elif key == ord('\n'):
-            selected = files[selection]
-            selectedPath = os.path.join(directory, selected)
+        elif k == ord('\n'):
+            selF = fls[sel]
+            selP = os.path.join(dir, selF)
+            if selF == "..":
+                dir = os.path.dirname(dir)
+                sel, off = 0, 0
+            elif os.path.isdir(selP):
+                dir = selP
+                sel, off = 0, 0
+            elif os.path.isfile(selP):
+                opn(selP)
 
-            if selected == "..":
-                directory = os.path.dirname(directory)
-                selection = 0
-                offset = 0
-            elif os.path.isdir(selectedPath):
-                directory = selectedPath
-                selection = 0
-                offset = 0
-            elif os.path.isfile(selectedPath):
-                os.startfile(selectedPath)
+        elif k == ord('r'):
+            selF = fls[sel]
+            renf(dir, selF, win)
 
-        elif key == ord('r'):
-            selected = files[selection]
-            renamef(directory, selected, win)
+        elif k == ord('d'):
+            selF = fls[sel]
+            selP = os.path.join(dir, selF)
+            win.addstr(curses.LINES - 2, 0, "Delete? (y/n): ")
+            cf = win.getch()
+            if cf == ord('y'):
+                if os.path.isfile(selP):
+                    os.remove(selP)
+                elif os.path.isdir(selP):
+                    shutil.rmtree(selP)
+                else:
+                    win.addstr(curses.LINES - 2, 0, "Error: Item does not exist!       ")
 
-        elif key == ord('d'):
-            selected = files[selection]
-            selectedPath = os.path.join(directory, selected)
-            win.addstr(curses.LINES - 2, 0, "Are you sure you want to delete? (y/n): ")
-            confirm = win.getch()
-            if confirm == ord('y'):
-                os.remove(selectedPath) if os.path.isfile(selectedPath) else shutil.rmtree(selectedPath)
-
-        elif key == ord('n'):
-            win.addstr(curses.LINES - 2, 0, "Enter folder name: ")
+        elif k == ord('n'):
+            win.addstr(curses.LINES - 2, 0, "Folder name: ")
             curses.echo()
-            NFname = win.getstr(curses.LINES - 2, 20, 80).decode("utf-8").strip()
+            nF = win.getstr(curses.LINES - 2, 12, 80).decode("utf-8").strip()
             curses.noecho()
-            if NFname:
-                os.mkdir(os.path.join(directory, NFname))
+            if nF:
+                new_folder_path = os.path.join(dir, nF)
+                if not os.path.exists(new_folder_path):
+                    os.mkdir(new_folder_path)
+                else:
+                    win.addstr(curses.LINES - 2, 0, "Error: Folder already exists!      ")
 
-        elif key == ord('c'):
-            selected = files[selection]
-            clipboard = os.path.join(directory, selected)
+        elif k == ord('c'):
+            selF = fls[sel]
+            clb = os.path.join(dir, selF)
 
-        elif key == ord('v') and clipboard:
-            if os.path.isfile(clipboard):
-                shutil.copy(clipboard, directory)
+        elif k == ord('v') and clb:  
+            dest_path = os.path.join(dir, os.path.basename(clb))
+            if os.path.isfile(clb):
+                if not os.path.exists(dest_path):
+                    shutil.copy(clb, dir)
+                else:
+                    win.addstr(curses.LINES - 2, 0, "Error: File already exists in destination!    ")
             else:
-                shutil.copytree(clipboard, os.path.join(directory, os.path.basename(clipboard)))
+                if not os.path.exists(dest_path):
+                    shutil.copytree(clb, dest_path)
+                else:
+                    win.addstr(curses.LINES - 2, 0, "Error: Directory already exists in destination!    ")
 
-        elif key == ord('g'):
-            win.addstr(curses.LINES - 2, 0, "Enter drive letter (e.g. C, D): ")
+        elif k == ord('g'):
+            win.addstr(curses.LINES - 2, 0, "Drive letter (C, D, etc.): ")
             curses.echo()
-            dl = win.getstr(curses.LINES - 2, 30, 5).decode("utf-8").strip().upper()
+            drv = win.getstr(curses.LINES - 2, 28, 5).decode("utf-8").strip().upper()
             curses.noecho()
-            if dl:
-                directory = f"{dl}:\\"
-                selection = 0
-                offset = 0
+            if drv:
+                new_dir = f"{drv}:\\"
+                if os.path.exists(new_dir):
+                    dir = new_dir
+                    sel, off = 0, 0
+                else:
+                    win.addstr(curses.LINES - 2, 0, "Error: Drive does not exist!      ")
 
-        elif key == ord('q'):
+        elif k == ord('q'): 
             break
-
+        
 def run():
-    curses.wrapper(manager)
+    curses.wrapper(mgr)
 
 if __name__ == "__main__":
     run()
