@@ -57,45 +57,47 @@ def gFci(f, dir):
         return curses.color_pair(1), "👻"
 
     extm = {
-        ('.txt', '.md', '.json', '.rst'): (3, "📄"),  
-        ('.py', '.pyw'): (5, "🐍"),                  
+        ('.txt', '.md', '.json', '.rst'): (1, "📄"),
+        ('.py', '.pyw'): (5, "🐍"),
         ('.jpg', '.jpeg', '.png', '.gif', '.svg', '.bmp', '.tiff'): (6, "🌆"),
-        ('.mp4', '.mkv', '.avi', '.mov', '.flv', '.gif', '.webm'): (7, "🎬"), 
-        ('.pdf',): (8, "📕"),               
-        ('.zip', '.rar', '.tar', '.gz', '.bz2', '.7z', '.xz'): (9, "📦"),
-        ('.exe', '.sh', '.msi', '.app', '.apk', '.bin'): (10, "💻"),
-        ('.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a'): (11, "🎵"),  
-        ('.doc', '.docx', '.odt', '.rtf', '.tex'): (12, "📝"),
-        ('.csv', '.xls', '.xlsx', '.ods'): (13, "📊"), 
-        ('.ppt', '.pptx', '.odp', '.key'): (14, "📊"),  
-        ('.html', '.htm', '.xhtml', '.xml'): (15, "🐘"),  
-        ('.php', '.php3', '.php4', '.php5'): (18, "🔧"),
-        ('.js', '.ts', '.jsx', '.tsx'): (19, "📜"),
-        ('.css', '.scss', '.less'): (20, "🎨"),
-        ('.sh', '.bash', '.zsh'): (10, "💻"), 
-        ('.log', '.out'): (25, "📋"),
-        ('.ttf', '.otf', '.woff', '.woff2'): (30, "🔤"),  
-        ('.sql', '.sqlite', '.db', '.accdb'): (31, "💾"),
-        ('.iso', '.img', '.vhd', '.vdi'): (32, "💿"),
-        ('.msi', '.cab'): (33, "🖥️"),  
-        ('.deb', '.rpm', '.pkg'): (34, "🐧"),  
-        ('.yml', '.yaml', '.ini', '.cfg'): (35, "🦑"),  
-        ('.dockerfile', '.container', '.tar.gz'): (36, "🐋"),  
-        ('.venv', '.env'): (37, "📦"),  
-        ('.crt', '.key', '.pem'): (38, "🔑"),  
-        ('.pyc', '.pyo'): (39, "🐍"),  
-        ('.bat', '.cmd'): (24, "🫀"),  
-        ('.pcap', '.cap'): (40, "🛜"),  
-        ('.rb'): (41, "💎"),
-        ('.go'): (42, "🐹"),  
-        ('.java', '.jar'): (43, "☕"),  
-        ('.c', '.cpp', '.h'): (44, "🖥️"),  
-        ('.rs'): (45, "🦀"),  
-        ('.pl', '.pm'): (46, "🐫"),  
-        ('.xml',): (47, "📂"),  
-        ('.yaml', '.yml'): (48, "📝"),  
-        ('.lua'): (49, "🌑"),  
-        ('.xz', '.bz2'): (50, "📦")
+        ('.mp4', '.mkv', '.avi', '.mov', '.flv', '.gif', '.webm'): (7, "🎬"),
+        ('.pdf',): (1, "📕"),
+        ('.zip', '.rar', '.tar', '.gz', '.bz2', '.7z', '.xz'): (2, "📦"),
+        ('.exe', '.sh', '.msi', '.app', '.apk', '.bin'): (3, "💻"),
+        ('.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a'): (4, "🎵"),
+        ('.doc', '.docx', '.odt', '.rtf', '.tex'): (1, "📝"),
+        ('.csv', '.xls', '.xlsx', '.ods'): (2, "📊"),
+        ('.ppt', '.pptx', '.odp', '.key'): (2, "📊"),
+        ('.html', '.htm', '.xhtml', '.xml'): (4, "🧬"),
+        ('.php', '.php3', '.php4', '.php5'): (3, "🐘"),
+        ('.js', '.ts', '.jsx', '.tsx'): (2, "📜"),
+        ('.css', '.scss', '.less'): (4, "🎨"),
+        ('.sh', '.bash', '.zsh'): (3, "💻"),
+        ('.log', '.out'): (5, "📋"),
+        ('.ttf', '.otf', '.woff', '.woff2'): (6, "🔤"),
+        ('.sql', '.sqlite', '.db', '.accdb'): (4, "💾"),
+        ('.iso', '.img', '.vhd', '.vdi'): (5, "💿"),
+        ('.msi', '.cab'): (4, "🖥️"),
+        ('.deb', '.rpm', '.pkg'): (4, "🐧"),
+        ('.yml', '.yaml', '.ini', '.cfg'): (1, "🦑"),
+        ('.dockerfile', '.container', '.tar.gz'): (3, "🐋"),
+        ('.venv', '.env'): (1, "🛖"),
+        ('.crt', '.key', '.pem'): (6, "🔑"),
+        ('.pyc', '.pyo'): (5, "🐍"),
+        ('.bat', '.cmd'): (7, "🫀"),
+        ('.pcap', '.cap'): (8, "🛜"),
+        ('.rb'): (8, "💎"),
+        ('.go'): (6, "🐹"),
+        ('.java', '.jar'): (5, "☕"),
+        ('.c', '.cpp', '.h'): (4, "🖥️"),
+        ('.rs'): (4, "🦀"),
+        ('.pl', '.pm'): (2, "🐫"),
+        ('.xml',): (2, "📂"),
+        ('.yaml', '.yml'): (1, "📝"),
+        ('.lua'): (5, "🌑"),
+        ('.bin'): (3, "🗑️"),
+        ('.lnk'): (3, "🔗"),
+        ('.xz', '.bz2'): (2, "📦")
     }
 
     if os.path.isdir(fP):
@@ -105,7 +107,7 @@ def gFci(f, dir):
         if f.endswith(exts):
             return curses.color_pair(clr), ico
 
-    return curses.color_pair(1), "👀"
+    return curses.color_pair(1), "🎭"
 
 def renf(dir, sel, win):
     curses.echo()
@@ -132,25 +134,8 @@ def mgr(win):
     curses.init_pair(5, curses.COLOR_CYAN, curses.COLOR_BLACK)
     curses.init_pair(6, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
     curses.init_pair(7, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_BLACK)
-    curses.init_pair(9, curses.COLOR_WHITE, curses.COLOR_BLACK)
-    curses.init_pair(10, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-    curses.init_pair(11, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(12, curses.COLOR_CYAN, curses.COLOR_BLACK)
-    curses.init_pair(13, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    curses.init_pair(14, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(15, curses.COLOR_BLUE, curses.COLOR_BLACK)
-    curses.init_pair(16, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-    curses.init_pair(17, curses.COLOR_CYAN, curses.COLOR_BLACK)
-    curses.init_pair(18, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
-    curses.init_pair(19, curses.COLOR_BLUE, curses.COLOR_BLACK)
-    curses.init_pair(20, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    curses.init_pair(21, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-    curses.init_pair(22, curses.COLOR_WHITE, curses.COLOR_BLACK)
-    curses.init_pair(23, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    curses.init_pair(24, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(25, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-    curses.init_pair(26, curses.COLOR_CYAN, curses.COLOR_BLACK)
+    curses.init_pair(8, curses.COLOR_BLACK, curses.COLOR_WHITE)  
+
     curses.init_pair(100, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(101, curses.COLOR_RED, curses.COLOR_WHITE)
 
@@ -230,9 +215,9 @@ def mgr(win):
             nF = win.getstr(curses.LINES - 2, 12, 80).decode("utf-8").strip()
             curses.noecho()
             if nF:
-                new_folder_path = os.path.join(dir, nF)
-                if not os.path.exists(new_folder_path):
-                    os.mkdir(new_folder_path)
+                nfp = os.path.join(dir, nF)
+                if not os.path.exists(nfp):
+                    os.mkdir(nfp)
                 else:
                     win.addstr(curses.LINES - 2, 0, "Error: Folder already exists!      ")
 
